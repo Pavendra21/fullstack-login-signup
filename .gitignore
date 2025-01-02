@@ -1,0 +1,29 @@
+# Node.js dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
+
+# Ignore node_modules in client and server
+backend/node_modules/
+frontend/node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Environment variables
+.env
+
+ 
+
+# IDE configuration
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Operating system files
+*.swp
+*.swo
