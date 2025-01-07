@@ -10,17 +10,24 @@ const Profile = () => {
     const [editFormData, setEditFormData] = useState({});
     const navigate = useNavigate();
 
+    const isLoggedIn = localStorage.getItem("isLoggedIn")==="true";
+
+ 
     useEffect(() => {
-        const fetchUserData = async () => {
-            try {
-                const response = await  getProfile();
-                setData(response.data.user);
-            } catch (error) {
-                console.error("Error fetching data:", error);
-            }
-        };
-        fetchUserData();
-    }, []);
+        if(isLoggedIn)
+        {
+
+            const fetchUserData = async () => {
+                try {
+                    const response = await  getProfile();
+                    setData(response.data.user);
+                } catch (error) {
+                    console.error("Error fetching data:", error);
+                }
+            };
+            fetchUserData();
+        }
+    }, [isLoggedIn]);
 
     //
     const productId = data._id
@@ -75,7 +82,7 @@ const Profile = () => {
         }
     };
 
-    return (
+    return isLoggedIn ? (
         <><ToastContainer/>
             <div className="flex justify-center bg-gray-100">
                 <div className="mr-3 p-1 mt-3 bg-blue-400 rounded-lg text-white hover:text-black cursor-pointer">
@@ -175,7 +182,9 @@ const Profile = () => {
                 )}
             </div>
         </>
-    );
+    ):(
+        <div>User not logged in</div>
+    );;
 };
 
 export default Profile;
