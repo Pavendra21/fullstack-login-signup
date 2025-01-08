@@ -1,12 +1,10 @@
 import React, { useState } from "react";
-import * as Yup from "yup";
 import { Link, useNavigate } from 'react-router-dom';
 import { createProfile } from '../Service/Api'
 import { ToastContainer, toast } from 'react-toastify';
+import { validate,isValid } from '../Validator/formValidation'; // Import validate function
 
 const Signup = () => {
-
-  //Usesate
 
   const [formData, setFormData] = useState({
     name: "",
@@ -14,54 +12,21 @@ const Signup = () => {
     phone: "",
     password: "",
     confirmPassword: "",
-    image: null, // Add image to formData
+    image: null,
   });
-
 
   const navigate = useNavigate()
   const [errors, setErrors] = useState({});
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Yup validation schema
-  const validationSchema = Yup.object().shape({
-    name: Yup.string().required("Name is required"),
-    email: Yup.string()
-      .email("Invalid email format")
-      .matches(/@gmail\.com$/, "Email must be a Gmail address")
-      .required("Email is required"),
-    phone: Yup.string()
-      .matches(/^\d{10}$/, "Phone number must be 10 digits")
-      .required("Phone number is required"),
-    password: Yup.string()
-      .matches(/[^A-Za-z0-9]/, "Password must contain at least one special character")
-      .required("Password is required"),
-    confirmPassword: Yup.string()
-      .oneOf([Yup.ref("password"), null], "Passwords must match")
-      .required("Confirm Password is required"),
-    image: Yup.mixed().required("Image is required"), // Add image validation
-  });
-
-  // Validation function
-  const validateFormData = async (data) => {
-    try {
-      await validationSchema.validate(data, { abortEarly: false });
-      return {}; // No errors
-    } catch (validationErrors) {
-      const errorObject = {};
-      validationErrors.inner.forEach((error) => {
-        errorObject[error.path] = error.message;
-      });
-      return errorObject;
-    }
-  };
+//HandleChange
 
   const handleChange = (e) => {
     const { name, value, files } = e.target;
     if (name === "image") {
-      // Handle file input
       setFormData({
         ...formData,
-        image: files[0], // Only store the first selected file
+        image: files[0],
       });
     } else {
       setFormData({
@@ -71,46 +36,42 @@ const Signup = () => {
     }
   };
 
+  // handle submit
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const validationErrors = await validateFormData(formData);
 
-    if (Object.keys(validationErrors).length === 0) {
-      setErrors({});
-      try {
-        // Create FormData to include the image
-        const formDataToSend = new FormData();
-        Object.entries(formData).forEach(([key, value]) => {
-          formDataToSend.append(key, value);
-        });
+    const validationErrors = validate(formData, formData); // Pass both parameters
 
-        // Send the form data to the backend
-        const response = await createProfile(formDataToSend)
+    if (isValid(validationErrors)) {
+        setErrors({});
+        try {
+            const formDataToSend = new FormData();
+            Object.entries(formData).forEach(([key, value]) => {
+                formDataToSend.append(key, value);
+            });
 
-        if (response.status === 200) {
-          setSuccessMessage("Signup successful!");
-          toast.success('Signup successful!')
-          setTimeout(() => {
-            navigate("/login")
+            const response = await createProfile(formDataToSend);   // fetching the data
 
-          }, 1000)
-          console.log("Form submitted successfully");
+            if (response.status === 200) {
+                setSuccessMessage("Signup successful!");
+                toast.success('Signup successful!');
+                setTimeout(() => {
+                    navigate("/login");
+                }, 1000);
+            }
+        } catch (error) {
+            if (error.response && error.response.data) {
+                setErrors({ api: error.response.data.message || "Something went wrong!" });
+                toast.error('Something went wrong');
+            } else {
+                setErrors({ api: "Failed to submit form. Please try again later." });
+            }
         }
-      } catch (error) {
-        if (error.response && error.response.data) {
-          // Error from the server
-          setErrors({ api: error.response.data.message || "Something went wrong!" });
-          toast.error('something went wrong')
-        } else {
-          // Network or other error
-          setErrors({ api: "Failed to submit form. Please try again later." });
-        }
-      }
     } else {
-      setErrors(validationErrors);
+        setErrors(validationErrors);
     }
-  };
-
+};
   return (
     <>
       <ToastContainer />
@@ -191,10 +152,7 @@ const Signup = () => {
 
             {/* Confirm Password Field */}
             <div className="mb-4">
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-700"
-              >
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700">
                 Confirm Password
               </label>
               <input
@@ -237,8 +195,11 @@ const Signup = () => {
               Sign Up
             </button>
           </form>
-          <div className="flex justify-center mt-2"><Link className="underline underline-offset-1 text-blue-500 mr-1" to="/login">Login</Link> if alredy register</div>
-
+          <div className="flex justify-center mt-2">
+            <Link className="underline underline-offset-1 text-blue-500 mr-1" to="/login">
+              Login if already registered
+            </Link>
+          </div>
         </div>
       </div>
     </>
